@@ -1,3 +1,6 @@
 token.txt
 __pycache__/
 settings_old.py
+player.py
+read.py
+data.json

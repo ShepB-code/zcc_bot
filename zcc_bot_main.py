@@ -12,6 +12,9 @@ import calculate
 import results
 import CommandErrorHandler
 import info
+import read
+import DataWriter
+import DataSender
 
 bot = commands.Bot(command_prefix='+')
 
@@ -26,6 +29,8 @@ bot.add_cog(calculate.Calculate(bot))
 bot.add_cog(results.Results(bot))
 bot.add_cog(CommandErrorHandler.CommandErrorHandler(bot))
 bot.add_cog(info.Info(bot))
-
+bot.add_cog(read.Read(bot))
+bot.add_cog(DataSender.DataSender(bot))
+bot.add_cog(DataWriter.DataWriter(bot))
 with open('token.txt', 'r') as f:
     bot.run(f.read().strip())

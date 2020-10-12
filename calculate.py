@@ -92,7 +92,7 @@ class Calculate(commands.Cog):
             
                 calc_embed.add_field(name="Total Score", value=f'**{total_score}**')
                 
-                self.data[name] = total_tuple[1]
+                self.data[name] = total_score
             else:
                 kill_input = int(args[0])
                 place_input = int(args[1])

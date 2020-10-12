@@ -14,7 +14,9 @@ class Info(commands.Cog):
         self.bot = bot
     
 
-    @commands.command()
+    @commands.command(
+        help="Hi I'm here to help"
+    )
     async def info(self, ctx):
         shep_id = 498331656822849536
         peter_id = 516652903763542017

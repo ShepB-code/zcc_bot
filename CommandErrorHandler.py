@@ -15,7 +15,7 @@ class CommandErrorHandler(commands.Cog):
     async def on_command_error(self, ctx, error):
 
         if isinstance(error, commands.MissingPermissions):
-            await ctx.send("You do not have valid permissions to run this command!")
+            await ctx.send(f"You are missing the {error.missing_perms} required to run this command")
         
         if isinstance(error, commands.CommandNotFound):
             await ctx.send("That command doesn't exist!")

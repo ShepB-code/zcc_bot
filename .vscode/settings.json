@@ -1,3 +1,8 @@
 {
-    "python.formatting.provider": "autopep8"
+    "python.formatting.provider": "autopep8",
+    "extensions.ignoreRecommendations": true,
+    "files.autoSave": "off"
+    "extensions.ignoreRecommendations": true,
+    "files.autoSave": "off"
+    "extensions.ignoreRecommendations": true
 }

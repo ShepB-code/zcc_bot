@@ -33,7 +33,27 @@ class DataSender(commands.Cog):
 
         with open("data.json", "w") as outfile: 
             json.dump(file_dict, outfile, indent=4)
-        
+    
+    async def update_embed_message(self, ctx, embed_message, embed):
+        if embed_message:
+            await embed_message.edit(embed=embed)
+            await embed_message.clear_reactions()
+        else:
+            embed_message = await ctx.send(embed=embed)
+        return embed_message
+
+    def is_admin(self, ctx, author):
+        return ctx.guild.id == self.guild_id and author.guild_permissions.administrator 
+    async def add_emoji_list(self, embed_message, emoji_list):
+        for emoji in emoji_list:
+            await embed_message.add_reaction(emoji)
+        return emoji_list
+    
+    async def get_type_change(self, ctx, reaction, emoji_dict):
+        msg = await ctx.send(emoji_dict[str(reaction)][0])
+        type_change = emoji_dict[str(reaction)][1]
+        index = emoji_dict[str(reaction)][2]
+        return msg, type_change, index
     # This function was written very late at night, please do not judge
     @commands.command()
     async def clan(self, ctx, *args, passed_command=None, embed_message=None, current_player=None):
@@ -63,66 +83,48 @@ class DataSender(commands.Cog):
         
         clan_embed = create_embed(current_clan)
 
-        if embed_message:
-            await embed_message.edit(embed=create_embed(current_clan))
-            await embed_message.clear_reactions()        
-        else:
-            embed_message = await ctx.send(embed=clan_embed)
-
-        if ctx.guild.id == self.guild_id and author.guild_permissions.administrator:
+        embed_message = await self.update_embed_message(ctx, embed_message, clan_embed)
+        
+        if self.is_admin(ctx, author):
             
             embed_dict = clan_embed.to_dict()
 
             
             if clan_name in clan_data.keys():
                 #Add if/else for admin
+                emoji_dict = {
+                    "📜": ["Please enters a new name: ", "clan_name", None],
+                    "👑": ["Please enter a new leader(s): ", "leaders", 0],
+                    "⏰": ["Please enter a new creation date: ", "creation_date", 1],
+                    "📷": ["Please enter a new clan image URL: ", "clan_image", None],
+                    "🏆": ["Please enter the amount of wins you want to add: ", "cs_wins", 2],
+                    "🥊": ["Please enter a new match: ", "cs_matches", 3]
+                }
                 
-
-                
-                emoji_list = ["📜","👑", "⏰", "📷","🏆", "🥊", "❌"]
-
-                for emoji in emoji_list:
-                    await embed_message.add_reaction(emoji)
+                emoji_list = await self.add_emoji_list(embed_message, list(emoji_dict.keys()) + ["❌"])
                 if passed_command:
                     emoji_list.append("⏪")
                     await embed_message.add_reaction("⏪")
+                
                 def reaction_check(reaction, user):
                     return user == message.author and str(reaction.emoji) in emoji_list
                 def message_check(message):
-                        return message.author == author and message.channel == channel
+                    return message.author == author and message.channel == channel
                 try:
                     while True:
                         reaction, user = await self.bot.wait_for('reaction_add', timeout=20.0, check=reaction_check)
                         type_change = ""
                         
                         
-                        if str(reaction) == "📜":
-                            msg = await ctx.send("Please enter a new name: ")
-                            type_change = "clan_name"
-                        elif str(reaction) == "👑":
-                            msg = await ctx.send("Please enter a new leader(s): ")
-                            type_change = "leaders"
-                            i = 0
-                        elif str(reaction) == "⏰":
-                            msg = await ctx.send("Please enter a new creation date: ")
-                            type_change = "creation_date"
-                            i=1
-                        elif str(reaction) == "📷":
-                            msg = await ctx.send("Please enter a new clan image URL: ")
-                            type_change = "clan_image"
-                        elif str(reaction) == "🏆":
-                            msg = await ctx.send("Please enter the amount of wins you want to add: ")
-                            type_change = "cs_wins"
-                            i=2
-                        elif str(reaction) == "🥊":
-                            msg = await ctx.send("Please enter a new match: ")
-                            type_change = "cs_matches"
-                            i=3
-                        elif str(reaction) == "⏪" and passed_command:
+                        if str(reaction) == "⏪" and passed_command:
                             return await passed_command.__call__(ctx, current_player["player_name"], embed_message=embed_message)
                         elif str(reaction) == "❌":
                             raise asyncio.TimeoutError
+
+                        #call function
+                       
                         
+                        msg, type_change, i = await self.get_type_change(ctx, reaction, emoji_dict)
                         update_info_message = await self.bot.wait_for('message', timeout=20.0, check=message_check)
                         
                         update_info = update_info_message.content
@@ -169,6 +171,7 @@ class DataSender(commands.Cog):
 
             #raise discord.ext.commands.MissingPermissions(missing_perms="Administrator") 
         
+    # TODO Add discord ID To json, and auto update profile picture
     @commands.command()
     async def player(self, ctx, *args, embed_message=None):
         message = ctx.message
@@ -177,7 +180,7 @@ class DataSender(commands.Cog):
         player_name = args[0]
         player_data = self.read_json()["player"]
         current_player = player_data[player_name]
-
+        
         def create_embed(current_player):
             player_embed = discord.Embed(
                 title=current_player["player_name"],
@@ -194,21 +197,19 @@ class DataSender(commands.Cog):
         if player_name in player_data.keys():
             
             player_embed = create_embed(current_player)
-            if embed_message:  
-                await embed_message.edit(embed=player_embed)
-                await embed_message.clear_reactions()
-            else:
-                embed_message = await ctx.send(embed=player_embed)
-                
-            if ctx.guild.id == self.guild_id and author.guild_permissions.administrator:
+            embed_message = await self.update_embed_message(ctx, embed_message, player_embed)
+
+            
+            if self.is_admin(ctx, author):
 
                     embed_dict = player_embed.to_dict()
-                    
-                    emoji_list = ["📜", "📷","🏆", "🥊", "🔎","❌"]
 
-                    for emoji in emoji_list:
-                        await embed_message.add_reaction(emoji)
-
+                
+                    emoji_dict = {"📜": ["Please enter a new clan: ", "clan", 0],
+                                    "🏆": ["Please enter the amount of wins you want to add: ", "cs_wins", 1],
+                                    "🥊": ["Please enter a new match: ", "cs_matches", 2]
+                                }
+                    emoji_list = await self.add_emoji_list(embed_message, list(emoji_dict.keys()) + ["🔎", "❌"])
 
                     def reaction_check(reaction, user):
                         return user == message.author and str(reaction.emoji) in emoji_list
@@ -218,28 +219,12 @@ class DataSender(commands.Cog):
                     try:
                         while True:
                             reaction, user = await self.bot.wait_for('reaction_add', timeout=20.0, check=reaction_check)
-                            type_change = ""
-
-                            if str(reaction) == "📜":
-                                msg = await ctx.send("Please enter a new clan: ")
-                                type_change = "clan"
-                                i = 0
-                            elif str(reaction) == "📷":
-                                await ctx.send("Not added yet")
-                                type_change = "player_image"
-                            elif str(reaction) == "🏆":
-                                msg = await ctx.send("Please enter the amount of wins you want to add: ")
-                                type_change = "cs_wins"
-                                i = 1
-                            elif str(reaction) == "🥊":
-                                msg = await ctx.send("Please the matches you want to add: ")
-                                type_change = "cs_matches"
-                                i = 2
-                            elif str(reaction) == "🔎":
+                            
+                            if str(reaction) == "🔎":
                                 return await self.bot.get_command("clan").__call__(ctx, current_player["clan"], passed_command=self.bot.get_command("player"), embed_message=embed_message, current_player=current_player)
-                        
                             elif str(reaction) == "❌":
                                 raise asyncio.TimeoutError
+                            msg, type_change, i = await self.get_type_change(ctx, reaction, emoji_dict)
                             
                             update_info_message = await self.bot.wait_for('message', timeout=20.0, check=message_check)
                             
@@ -279,19 +264,3 @@ class DataSender(commands.Cog):
         else:
             await ctx.send("That player doesn't exist!")
        
-        
-
-
-
-
-    
-        
-        
-
-    
-        
-        
-
-    
-        
-        

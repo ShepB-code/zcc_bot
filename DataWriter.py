@@ -41,7 +41,7 @@ class DataWriter(commands.Cog):
 
     @add.command()
     async def clan(self, ctx, *args):
-        clan_name = args[0]
+        clan_name = args[0].lower()
         creation_date = args[1]
         clan_leaders = args[2]
         clan_image = args[3]
@@ -55,8 +55,8 @@ class DataWriter(commands.Cog):
     
     @add.command()
     async def player(self, ctx, member : discord.Member, *args):
-        player_name = member.name
-        clan = args[0]
+        player_name = member.name.lower()
+        clan = args[0].lower()
         #player_image = args[1]
         player_image = str(member.avatar_url)
         

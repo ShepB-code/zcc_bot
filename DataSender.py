@@ -60,114 +60,116 @@ class DataSender(commands.Cog):
         message = ctx.message
         author = ctx.message.author
         channel = ctx.channel
-        clan_name = args[0]
+        clan_name = args[0].lower()
         clan_data = self.read_json()["clan"]
-        current_clan = clan_data[clan_name]
 
-        def create_embed(current_clan):
-            clan_embed = discord.Embed(
-                title=current_clan['clan_name'] + " 📜",
-                description="Clan Information and Stats",
-                color=discord.Color.blue()
-                )
+        if clan_name in clan_data.keys():
+            current_clan = clan_data[clan_name]
 
-            clan_embed.add_field(name="Leader(s) 👑", value=current_clan['leaders'], inline=True)
-            clan_embed.add_field(name="Creation Date ⏰", value=current_clan['creation_date'], inline=True)
-            clan_embed.add_field(name="CS Wins 🏆", value=current_clan['cs_wins'], inline=False)
-            clan_embed.add_field(name="Matches Played 🥊", value=current_clan['cs_matches'], inline=True)
-            clan_embed.add_field(name="Winrate 📈", value=current_clan['win_rate'], inline=False)
-            clan_embed.set_image(url=current_clan['clan_image'])
-            clan_embed.set_footer(text='Made by Shep and Peter', icon_url=self.bot.get_user(self.bot.user.id).avatar_url)
-            
-            return clan_embed
-        
-        clan_embed = create_embed(current_clan)
+            def create_embed(current_clan):
+                clan_embed = discord.Embed(
+                    title=current_clan['clan_name'].capitalize() + " 📜",
+                    description="Clan Information and Stats",
+                    color=discord.Color.blue()
+                    )
 
-        embed_message = await self.update_embed_message(ctx, embed_message, clan_embed)
-        
-        if self.is_admin(ctx, author):
-            
-            embed_dict = clan_embed.to_dict()
-
-            
-            if clan_name in clan_data.keys():
-                #Add if/else for admin
-                emoji_dict = {
-                    "📜": ["Please enters a new name: ", "clan_name", None],
-                    "👑": ["Please enter a new leader(s): ", "leaders", 0],
-                    "⏰": ["Please enter a new creation date: ", "creation_date", 1],
-                    "📷": ["Please enter a new clan image URL: ", "clan_image", None],
-                    "🏆": ["Please enter the amount of wins you want to add: ", "cs_wins", 2],
-                    "🥊": ["Please enter a new match: ", "cs_matches", 3]
-                }
+                clan_embed.add_field(name="Leader(s) 👑", value=current_clan['leaders'], inline=True)
+                clan_embed.add_field(name="Creation Date ⏰", value=current_clan['creation_date'], inline=True)
+                clan_embed.add_field(name="CS Wins 🏆", value=current_clan['cs_wins'], inline=False)
+                clan_embed.add_field(name="Matches Played 🥊", value=current_clan['cs_matches'], inline=True)
+                clan_embed.add_field(name="Winrate 📈", value=current_clan['win_rate'], inline=False)
+                clan_embed.set_image(url=current_clan['clan_image'])
+                clan_embed.set_footer(text='Made by Shep and Peter', icon_url=self.bot.get_user(self.bot.user.id).avatar_url)
                 
-                emoji_list = await self.add_emoji_list(embed_message, list(emoji_dict.keys()) + ["❌"])
-                if passed_command:
-                    emoji_list.append("⏪")
-                    await embed_message.add_reaction("⏪")
+                return clan_embed
+            
+            clan_embed = create_embed(current_clan)
+
+            embed_message = await self.update_embed_message(ctx, embed_message, clan_embed)
+            
+            if self.is_admin(ctx, author):
                 
-                def reaction_check(reaction, user):
-                    return user == message.author and str(reaction.emoji) in emoji_list
-                def message_check(message):
-                    return message.author == author and message.channel == channel
-                try:
-                    while True:
-                        reaction, user = await self.bot.wait_for('reaction_add', timeout=20.0, check=reaction_check)
-                        type_change = ""
-                        
-                        
-                        if str(reaction) == "⏪" and passed_command:
-                            return await passed_command.__call__(ctx, current_player["player_name"], embed_message=embed_message)
-                        elif str(reaction) == "❌":
-                            raise asyncio.TimeoutError
+                embed_dict = clan_embed.to_dict()
 
-                        #call function
-                       
-                        
-                        msg, type_change, i = await self.get_type_change(ctx, reaction, emoji_dict)
-                        update_info_message = await self.bot.wait_for('message', timeout=20.0, check=message_check)
-                        
-                        update_info = update_info_message.content
-
-                        if type_change == "clan_name" or type_change == "clan_image" or type_change == "leaders" or type_change == "creation_date":
-                            current_clan[type_change] = update_info
+                
+                if clan_name in clan_data.keys():
+                    #Add if/else for admin
+                    emoji_dict = {
+                        "📜": ["Please enters a new name: ", "clan_name", None],
+                        "👑": ["Please enter a new leader(s): ", "leaders", 0],
+                        "⏰": ["Please enter a new creation date: ", "creation_date", 1],
+                        "📷": ["Please enter a new clan image URL: ", "clan_image", None],
+                        "🏆": ["Please enter the amount of wins you want to add: ", "cs_wins", 2],
+                        "🥊": ["Please enter a new match: ", "cs_matches", 3]
+                    }
+                    
+                    emoji_list = await self.add_emoji_list(embed_message, list(emoji_dict.keys()) + ["❌"])
+                    if passed_command:
+                        emoji_list.append("⏪")
+                        await embed_message.add_reaction("⏪")
+                    
+                    def reaction_check(reaction, user):
+                        return user == message.author and str(reaction.emoji) in emoji_list
+                    def message_check(message):
+                        return message.author == author and message.channel == channel
+                    try:
+                        while True:
+                            reaction, user = await self.bot.wait_for('reaction_add', timeout=20.0, check=reaction_check)
+                            type_change = ""
                             
-                        else:
-                            if type_change == "cs_wins":
-                                current_clan["cs_wins"] += int(update_info)
-                                current_clan["cs_matches"] += int(update_info)
-                                embed_dict['fields'][3]['value'] = current_clan["cs_matches"] #auto update
+                            
+                            if str(reaction) == "⏪" and passed_command:
+                                return await passed_command.__call__(ctx, current_player["player_name"], embed_message=embed_message)
+                            elif str(reaction) == "❌":
+                                raise asyncio.TimeoutError
 
+                            #call function
+                        
+                            
+                            msg, type_change, i = await self.get_type_change(ctx, reaction, emoji_dict)
+                            update_info_message = await self.bot.wait_for('message', timeout=20.0, check=message_check)
+                            
+                            update_info = update_info_message.content
+
+                            if type_change == "clan_name" or type_change == "clan_image" or type_change == "leaders" or type_change == "creation_date":
+                                current_clan[type_change] = update_info
+                                
                             else:
-                                current_clan["cs_matches"] += int(update_info)
+                                if type_change == "cs_wins":
+                                    current_clan["cs_wins"] += int(update_info)
+                                    current_clan["cs_matches"] += int(update_info)
+                                    embed_dict['fields'][3]['value'] = current_clan["cs_matches"] #auto update
 
-                            current_clan['win_rate'] = float(current_clan["cs_wins"]) / float(current_clan["cs_matches"])
-                            embed_dict['fields'][4]['value'] = str(current_clan['win_rate'] * 100) + "%" #auto update
+                                else:
+                                    current_clan["cs_matches"] += int(update_info)
 
-                        
-                        if type_change == "clan_name":
-                            embed_dict['title'] = current_clan[type_change]
-                            clan_data[current_clan[type_change]] = clan_data.pop(clan_name)
-                            self.write_json("change_clan", clan_data)
-                            #TODO Duplicate clans
-                        elif type_change == "clan_image":
-                            embed_dict["image"]["url"] = current_clan[type_change]
-                            self.write_json("clan", current_clan)
-                        else:
-                            embed_dict['fields'][i]['value'] = current_clan[type_change]
-                            self.write_json("clan", current_clan)
+                                current_clan['win_rate'] = float(current_clan["cs_wins"]) / float(current_clan["cs_matches"])
+                                embed_dict['fields'][4]['value'] = str(int(current_clan['win_rate'] * 100)) + "%" #auto update
 
-                        
-                        await embed_message.edit(embed=discord.Embed.from_dict(embed_dict))
-                        await msg.delete()
-                        await update_info_message.delete()
+                            
+                            if type_change == "clan_name":
+                                embed_dict['title'] = current_clan[type_change]
+                                clan_data[current_clan[type_change]] = clan_data.pop(clan_name)
+                                self.write_json("change_clan", clan_data)
+                                #TODO Duplicate clans
+                            elif type_change == "clan_image":
+                                embed_dict["image"]["url"] = current_clan[type_change]
+                                self.write_json("clan", current_clan)
+                            else:
+                                embed_dict['fields'][i]['value'] = current_clan[type_change]
+                                self.write_json("clan", current_clan)
 
-                except asyncio.TimeoutError:
-                    clan_embed.color = discord.Color.dark_grey()
-                    clan_embed.title += "(Inactive)"
-                    await embed_message.edit(embed=clan_embed)
+                            
+                            await embed_message.edit(embed=discord.Embed.from_dict(embed_dict))
+                            await msg.delete()
+                            await update_info_message.delete()
+
+                    except asyncio.TimeoutError:
+                        clan_embed.color = discord.Color.dark_grey()
+                        clan_embed.title += "(Inactive)"
+                        await embed_message.edit(embed=clan_embed)
         else:
-            embed_message = await ctx.send(embed=create_embed(current_clan))
+            await ctx.send("That clan doesn't exist!")
 
             #raise discord.ext.commands.MissingPermissions(missing_perms="Administrator") 
         
@@ -177,24 +179,26 @@ class DataSender(commands.Cog):
         message = ctx.message
         author = ctx.message.author
         channel = ctx.channel
-        player_name = args[0]
+        player_name = args[0].lower()
         player_data = self.read_json()["player"]
-        current_player = player_data[player_name]
-        
-        def create_embed(current_player):
-            player_embed = discord.Embed(
-                title=current_player["player_name"],
-                description="Player information and stats",
-                color=discord.Color.blue()
-            )
-            player_embed.add_field(name="Clan Affiliation", value=f'{current_player["clan"]} react with 🔎 to view the clan', inline=True)
-            player_embed.add_field(name="Wins", value=current_player["cs_wins"], inline=False)
-            player_embed.add_field(name="Total Matches Played", value=current_player["cs_matches"], inline=True)
-            player_embed.add_field(name="Win Rate", value=current_player["win_rate"], inline=False)
-            player_embed.set_thumbnail(url=current_player["player_image"])
 
-            return player_embed
         if player_name in player_data.keys():
+            current_player = player_data[player_name]
+            
+            def create_embed(current_player):
+                player_embed = discord.Embed(
+                    title=current_player["player_name"].capitalize(),
+                    description="Player information and stats",
+                    color=discord.Color.blue()
+                )
+                player_embed.add_field(name="Clan Affiliation", value=f'{current_player["clan"].capitalize()} react with 🔎 to view the clan', inline=True)
+                player_embed.add_field(name="Wins", value=current_player["cs_wins"], inline=False)
+                player_embed.add_field(name="Total Matches Played", value=current_player["cs_matches"], inline=True)
+                player_embed.add_field(name="Win Rate", value=current_player["win_rate"], inline=False)
+                player_embed.set_thumbnail(url=current_player["player_image"])
+
+                return player_embed
+        
             
             player_embed = create_embed(current_player)
             embed_message = await self.update_embed_message(ctx, embed_message, player_embed)
@@ -202,65 +206,63 @@ class DataSender(commands.Cog):
             
             if self.is_admin(ctx, author):
 
-                    embed_dict = player_embed.to_dict()
+                embed_dict = player_embed.to_dict()
 
+            
+                emoji_dict = {"📜": ["Please enter a new clan: ", "clan", 0],
+                                "🏆": ["Please enter the amount of wins you want to add: ", "cs_wins", 1],
+                                "🥊": ["Please enter a new match: ", "cs_matches", 2]
+                            }
+                emoji_list = await self.add_emoji_list(embed_message, list(emoji_dict.keys()) + ["🔎", "❌"])
+
+                def reaction_check(reaction, user):
+                    return user == message.author and str(reaction.emoji) in emoji_list
+                def message_check(message):
+                        return message.author == author and message.channel == channel
                 
-                    emoji_dict = {"📜": ["Please enter a new clan: ", "clan", 0],
-                                    "🏆": ["Please enter the amount of wins you want to add: ", "cs_wins", 1],
-                                    "🥊": ["Please enter a new match: ", "cs_matches", 2]
-                                }
-                    emoji_list = await self.add_emoji_list(embed_message, list(emoji_dict.keys()) + ["🔎", "❌"])
+                try:
+                    while True:
+                        reaction, user = await self.bot.wait_for('reaction_add', timeout=20.0, check=reaction_check)
+                        
+                        if str(reaction) == "🔎":
+                            return await self.bot.get_command("clan").__call__(ctx, current_player["clan"], passed_command=self.bot.get_command("player"), embed_message=embed_message, current_player=current_player)
+                        elif str(reaction) == "❌":
+                            raise asyncio.TimeoutError
+                        msg, type_change, i = await self.get_type_change(ctx, reaction, emoji_dict)
+                        
+                        update_info_message = await self.bot.wait_for('message', timeout=20.0, check=message_check)
+                        
+                        update_info = update_info_message.content
 
-                    def reaction_check(reaction, user):
-                        return user == message.author and str(reaction.emoji) in emoji_list
-                    def message_check(message):
-                            return message.author == author and message.channel == channel
-                    
-                    try:
-                        while True:
-                            reaction, user = await self.bot.wait_for('reaction_add', timeout=20.0, check=reaction_check)
-                            
-                            if str(reaction) == "🔎":
-                                return await self.bot.get_command("clan").__call__(ctx, current_player["clan"], passed_command=self.bot.get_command("player"), embed_message=embed_message, current_player=current_player)
-                            elif str(reaction) == "❌":
-                                raise asyncio.TimeoutError
-                            msg, type_change, i = await self.get_type_change(ctx, reaction, emoji_dict)
-                            
-                            update_info_message = await self.bot.wait_for('message', timeout=20.0, check=message_check)
-                            
-                            update_info = update_info_message.content
-
-                            if type_change == "player_image":
-                                current_player[type_change] = update_info
-                            elif type_change == "clan":
-                                current_player[type_change] = update_info
+                        if type_change == "player_image":
+                            current_player[type_change] = update_info
+                        elif type_change == "clan":
+                            current_player[type_change] = update_info
+                        else:
+                            if type_change == "cs_wins":
+                                current_player["cs_wins"] += int(update_info)
+                                current_player["cs_matches"] += int(update_info)
+                                embed_dict["fields"][2]["value"] = current_player["cs_matches"]
                             else:
-                                if type_change == "cs_wins":
-                                    current_player["cs_wins"] += int(update_info)
-                                    current_player["cs_matches"] += int(update_info)
-                                    embed_dict["fields"][2]["value"] = current_player["cs_matches"]
-                                else:
-                                    current_player["cs_matches"] += int(update_info)
-                                
-                                current_player["win_rate"] = float(current_player["cs_wins"]) / float(current_player["cs_matches"])
-                                embed_dict['fields'][3]['value'] = str(current_player['win_rate'] * 100) + "%" #auto update
+                                current_player["cs_matches"] += int(update_info)
                             
-                            if type_change == "player_image":
-                                pass #not implimented
-                            else:
-                                embed_dict["fields"][i]["value"] = current_player[type_change]
-                                self.write_json("player", current_player)
-                            
-                            await embed_message.edit(embed=discord.Embed.from_dict(embed_dict))
-                            await msg.delete()
-                            await update_info_message.delete()
+                            current_player["win_rate"] = float(current_player["cs_wins"]) / float(current_player["cs_matches"])
+                            embed_dict['fields'][3]['value'] = str(int(current_player['win_rate'] * 100)) + "%" #auto update
+                        
+                        if type_change == "player_image":
+                            pass #not implimented
+                        else:
+                            embed_dict["fields"][i]["value"] = current_player[type_change]
+                            self.write_json("player", current_player)
+                        
+                        await embed_message.edit(embed=discord.Embed.from_dict(embed_dict))
+                        await msg.delete()
+                        await update_info_message.delete()
 
-                    except asyncio.TimeoutError:
-                        player_embed.color = discord.Color.dark_grey()
-                        player_embed.title += "(Inactive)"
-                        await embed_message.edit(embed=player_embed)
-            else:
-                embed_message = await ctx.send(embed=create_embed(current_player))
+                except asyncio.TimeoutError:
+                    player_embed.color = discord.Color.dark_grey()
+                    player_embed.title += "(Inactive)"
+                    await embed_message.edit(embed=player_embed)
         else:
             await ctx.send("That player doesn't exist!")
        

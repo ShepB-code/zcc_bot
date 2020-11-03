@@ -4,6 +4,7 @@ import itertools
 from discord.ext import commands
 import discord.utils
 from discord.utils import get
+import asyncio
 
 class CommandErrorHandler(commands.Cog):
     """Cog for the CommandErrorHandler Command"""
@@ -13,9 +14,13 @@ class CommandErrorHandler(commands.Cog):
     
     @commands.Cog.listener()
     async def on_command_error(self, ctx, error):
-
         if isinstance(error, commands.MissingPermissions):
             await ctx.send(f"You are missing the {error.missing_perms} required to run this command")
         
         if isinstance(error, commands.CommandNotFound):
             await ctx.send("That command doesn't exist!")
+        
+        if isinstance(error.original, asyncio.exceptions.TimeoutError):
+            await ctx.send("Timeout error.original!")
+        
+            

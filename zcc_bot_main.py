@@ -29,7 +29,7 @@ async def on_ready():
 bot.add_cog(settings.Settings(bot))
 bot.add_cog(calculate.Calculate(bot))
 bot.add_cog(results.Results(bot))
-#bot.add_cog(CommandErrorHandler.CommandErrorHandler(bot))
+bot.add_cog(CommandErrorHandler.CommandErrorHandler(bot))
 bot.add_cog(info.Info(bot))
 bot.add_cog(read.Read(bot))
 bot.add_cog(DataSender.DataSender(bot, guild_id))

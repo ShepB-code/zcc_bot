@@ -8,19 +8,24 @@ import asyncio
 
 
 class Info(commands.Cog):
+    prefix = "+"
     """Cog for the Info Command"""
 
     def __init__(self, bot):
         self.bot = bot
-    
+        self.prefix =  self.bot.command_prefix
+
 
     @commands.command(
         help="Hi I'm here to help"
     )
     async def info(self, ctx):
+
+        cogs = list(self.bot.cogs)
+
+            
         shep_id = 498331656822849536
         peter_id = 516652903763542017
-        prefix = await self.bot.get_prefix(ctx.message)
         message = ctx.message
         emoji_list = ['🤖', '🏠']
 
@@ -38,13 +43,20 @@ class Info(commands.Cog):
             description=f"Commands in the ZCC Bot\nReact with {emoji_list[1]} to see info about the ZCC Bot",
             color=discord.Color.blue()
         )
+
+        for name in cogs:
+            cog = self.bot.get_cog(name)
+            for c in [command for command in cog.walk_commands()]:
+                commands_embed.add_field(name=c.name, value=c.help.replace("{prefix}", self.prefix), inline=False)
+                
+        """
         commands_embed.add_field(name="Settings", value=f"`{prefix}settings` to check current settings\n`{prefix}settings update` to update settings", inline=False)
         commands_embed.add_field(name="Calculate", value=f"There are two ways to use this command\n\nFirst Usage:\n`{prefix}calc or {prefix}c`, followed by two parameters: `kills` and `place number`\n\nSecond Usage:\n`{prefix}calc or {prefix}c`, followed by at least 4 paramters: `player_name`, `match_name`, `kills`, and `placing`.\n\nUsing this same format, you can enter and calculate many matches in one call.\n\nExample: `{prefix}calc Shep MatchOne 10 1 MatchTwo 20 2`", inline=False)
         commands_embed.add_field(name="Results", value=f"`{prefix}results` to get the top *10* scores that have been entered.\nYou can add any integer as a parameter to this function to get specific placings.\nExample: `{prefix}results 50` would get the top 50 scores.", inline=False)
-        commands_embed.set_footer(text='Made by Shep and Peter', icon_url=self.bot.get_user(self.bot.user.id).avatar_url)
-
+        """
         embed_message = await ctx.send(embed=info_embed_home)
 
+        commands_embed.set_footer(text='Made by Shep and Peter', icon_url=self.bot.get_user(self.bot.user.id).avatar_url)
         for emoji in emoji_list: 
             await embed_message.add_reaction(emoji)
 

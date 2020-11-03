@@ -11,7 +11,6 @@ from playerClass import PlayerClass
 
 class DataWriter(commands.Cog):
     """Cog for the Data command"""
-
     def __init__(self, bot):
         self.bot = bot
 
@@ -34,17 +33,25 @@ class DataWriter(commands.Cog):
             json.dump(file_dict, outfile, indent=4)
     
     #@commands.has_guild_permissions(administrator=True)
-    @commands.group()
+    @commands.group(
+        help="`{prefix}add` is used to add clans and players"
+    )
     async def add(self, ctx):
+        prefix = self.bot.command_prefix
         if ctx.invoked_subcommand is None:
-            await ctx.send("Please invoke a subcommand `+add clan or +add player`")
+            await ctx.send(f"Please invoke a subcommand `{prefix}add clan` or `{prefix}add player`")
 
-    @add.command()
+    @add.command(
+        help="`{prefix}add clan` is used to add a clan to a json file.\nUsage: `{prefix}add clan clan_name, creation_date, clan_leader(s), clan_image` (No commas)"
+    )
     async def clan(self, ctx, *args):
-        clan_name = args[0].lower()
-        creation_date = args[1]
-        clan_leaders = args[2]
-        clan_image = args[3]
+        new_args = (" ".join(args)).split(":")
+        clan_name = new_args[0]
+
+        clan_info = new_args[1].split()
+        creation_date = clan_info[0]
+        clan_leaders = clan_info[1]
+        clan_image = clan_info[2]
         
         clan = ClanClass(clan_name, creation_date, clan_leaders, clan_image)
         clan_data = clan.get_clan_data()
@@ -53,7 +60,9 @@ class DataWriter(commands.Cog):
         
     
     
-    @add.command()
+    @add.command(
+        help="`{prefix}add player` is used to add a player to a json file.\nUsage: `{prefix}add player mention_player, player_clan` (No commas)"
+    )
     async def player(self, ctx, member : discord.Member, *args):
         player_name = member.name.lower()
         clan = args[0].lower()

@@ -14,12 +14,13 @@ class Results(commands.Cog):
         self.bot = bot
 
     
-    @commands.command()
+    @commands.command(
+        help="`{prefix}results` to get the top *10* scores that have been entered.\nYou can add any integer as a parameter to this function to get specific placings.\nExample: `{prefix}results 50` would get the top 50 scores."
+    )
     @commands.has_guild_permissions(administrator=True)
     async def results(self, ctx, *args):
         
 
-            
         leaderboard = self.bot.get_cog('Calculate').get_sorted_leaderboard()
         if not args:
             leaderboard_num = min(10, len(leaderboard))

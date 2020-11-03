@@ -10,11 +10,13 @@ import json
 from clanClass import ClanClass
 
 class DataSender(commands.Cog):
+    prefix = "+"
     """Cog for the clan command"""
     def __init__(self, bot, guild_id):
         self.bot = bot
         self.guild_id = guild_id
         self.file_name = "data.json"
+        prefix = self.bot.command_prefix
 
     def read_json(self):
         with open(self.file_name, 'r') as f:
@@ -55,7 +57,9 @@ class DataSender(commands.Cog):
         index = emoji_dict[str(reaction)][2]
         return msg, type_change, index
     # This function was written very late at night, please do not judge
-    @commands.command()
+    @commands.command(
+        help="`{prefix}clan` is used to view and edit clan information\nUsage: `{prefix}clan clan_name`"
+    )
     async def clan(self, ctx, *args, passed_command=None, embed_message=None, current_player=None):
         message = ctx.message
         author = ctx.message.author
@@ -174,7 +178,9 @@ class DataSender(commands.Cog):
             #raise discord.ext.commands.MissingPermissions(missing_perms="Administrator") 
         
     # TODO Add discord ID To json, and auto update profile picture
-    @commands.command()
+    @commands.command(
+        help="`{prefix}player` is used to view and edit clan information\nUsage: `{prefix}player player_name`"
+    )
     async def player(self, ctx, *args, embed_message=None):
         message = ctx.message
         author = ctx.message.author

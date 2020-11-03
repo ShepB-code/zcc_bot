@@ -6,13 +6,18 @@ import discord.utils
 from discord.utils import get
 
 class Settings(commands.Cog):
+    prefix = "+"
     """Cog for the Settings Command"""
     def __init__(self, bot):
         self.bot = bot
         self.settings_embed = None
         self.settings_dict = {"KillSetting": 0, 1: 0}
         self.bot_id = 757700872791654500
-    @commands.group()
+        prefix = self.bot.command_prefix
+
+    @commands.group(
+        help=f"A command to access and update calculation settings.\n`{prefix}settings` to view current settings"
+    )
     @commands.has_guild_permissions(administrator=True)
     async def settings(self, ctx):
         if ctx.invoked_subcommand is None:
@@ -21,7 +26,9 @@ class Settings(commands.Cog):
             else:
                 await ctx.send(embed=self.create_embed())
     
-    @settings.command()
+    @settings.command(
+        help=f"`{prefix}settings update` to update settings"
+    )
     async def update(self, ctx):
 
         channel = ctx.channel

@@ -18,6 +18,8 @@ class Calculate(commands.Cog):
             color=discord.Color.blue()
         )
         self.data = dict()
+        self.prefix =  self.bot.command_prefix
+
         
     def total(self, kills, place):
         settings = self.bot.get_cog('Settings').get_settings()
@@ -39,14 +41,11 @@ class Calculate(commands.Cog):
         name="Calc",
         help=
         """
-        Help: This command is used to calculate scores for players,\
+        This command is used to calculate scores for players,\
         given the kills they got and their in-game placing.
+        Usage: `{prefix}c(alc) (Kills) (Placing)`\
+        or `{prefix}c(alc) (MatchNum) (Kills) (Placing) (MatchNum) (Kills) (Placing)`\
         """,
-        usage=
-        """
-        Usage: ?calc (Kills) (Placing)`\
-         or ?calc (MatchNum) (Kills) (Placing) (MatchNum) (Kills) (Placing)\
-         """,
         aliases=['c', 'calc']
     )
     @commands.has_guild_permissions(administrator=True)

@@ -8,17 +8,8 @@ from discord.utils import get
 import asyncio
 import json 
 
-class MyTimeoutError(asyncio.TimeoutError):
-    def __init__(self, msg):
-        self.msg = msg
-
-    # __str__ is to print() the value  
-    def __str__(self):  
-        return(repr(self.msg))  
-
 class MatchMaker(commands.Cog):
     """Cog for the Scrim command"""
-
     def __init__(self, bot):
         self.bot = bot
         self.file_name = "data.json"
@@ -61,7 +52,7 @@ class MatchMaker(commands.Cog):
         
         except asyncio.TimeoutError:
             if len(msg.embeds):
-                embed = msg.embed[0]
+                embed = msg.embeds[0]
                 embed.color = discord.Color.dark_grey()
                 embed.title += "(Inactive)"
                 await msg.edit(embed=embed)
@@ -106,26 +97,26 @@ class MatchMaker(commands.Cog):
 
             return match_game, match_players, match_time, match_rounds, match_notify, match_info
         elif match_type == "Clan":
-            msg = await ctx.send("Which teams would you like to use? (Please separate each team by a space)")
-            match_teams = (await self.message_wait_for(ctx, msg)).content.split()
-            await msg.delete()
-
-            msg = await ctx.send("Who would you like to notify for this match (Ping a role).")
-            match_notify = (await self.message_wait_for(ctx, msg)).role_mentions
+            msg = await ctx.send("Which teams would you like to use? (Ping roles that correspond to that team)")
+            match_teams = (await self.message_wait_for(ctx, msg)).role_mentions
             await msg.delete()
 
             msg = await ctx.send("Please enter any additional information for this match.")
             match_info = (await self.message_wait_for(ctx, msg)).content
             await msg.delete()
 
-            return match_game, match_players, match_time, match_rounds, match_teams, match_notify, match_info
+            return match_game, match_players, match_time, match_rounds, match_teams, match_info
 
-    @commands.group()
+    @commands.group(
+        help=f"A command that is used to setup custom scrims and matchs."
+    )
     async def scrim(self, ctx):
         if ctx.invoked_subcommand is None:
             await ctx.send("No subcommand invoked. ")
     
-    @scrim.command()
+    @scrim.command(
+        help="`{prefix}scrim setup` is used to setup scrims and matches. You will be given messages to respond and react to."
+    )
     async def setup(self, ctx):
         scrim_settings = self.read_json()
         author = ctx.message.author
@@ -143,33 +134,38 @@ class MatchMaker(commands.Cog):
                 
             elif reaction == "🏰":
                 match_type = "Clan"
-                match_game, match_players, match_time, match_rounds, match_teams, match_notify, match_info = await self.setup_match(ctx, match_type)
-
+                match_game, match_players, match_time, match_rounds, match_teams, match_info = await self.setup_match(ctx, match_type)
+                match_notify = match_teams
 
             match_embed = discord.Embed(
                 title="Scrim",
                 description=f"{match_game} match at {match_time}\n\n{match_info}",
                 color=discord.Color.blue()
             )
-            match_embed.add_field(name="Competitors", value=f"{match_players[0]} vs {match_players[1]}")
-            match_embed.add_field(name="Rounds", value=match_rounds)
+            match_embed.add_field(name="Competitors", value=f"{match_players[0]} vs {match_players[1]}", inline=False)
+            match_embed.add_field(name="Rounds", value=match_rounds, inline=False)
+            match_embed.set_thumbnail(url=guild.icon_url)
+            match_embed.set_footer(text='Made by Shep and Peter', icon_url=self.bot.get_user(self.bot.user.id).avatar_url)
 
             if match_type == "Clan":
-                match_embed.add_field(name="Team(s)", value=" ".join([team for team in match_teams]), inline=True)
+                match_embed.add_field(name="Team(s)", value=" ".join([notify.mention for notify in match_notify]), inline=False)
 
             embed_msg = await ctx.send(embed=match_embed)
             
-            await ctx.send(f"Please confirm the scrim details by reacting. On approval, match info will be sent to {channel.mention}.")
+            await ctx.send(f"{author.mention}, please confirm the scrim details by reacting. On approval, match info will be sent to {channel.mention}.")
             reaction, user = await self.reaction_wait_for(ctx, ["✅", "❌"], embed_msg)
 
             if reaction == "✅":
                 await channel.send(embed=match_embed)
                 await channel.send(" ".join([notify.mention for notify in match_notify]))
             else:
-                raise asyncio.TimeoutError
+                match_embed.color = discord.Color.dark_grey()
+                match_embed.title += " (Inactive)"
+                await embed_msg.edit(embed=match_embed)
 
-
-    @scrim.command()
+    @scrim.command(
+        help="`{prefix}scrim settings` is used to make and edit settings for a specific server. These settings include which role can access the scrim commands, and which channel scrims and matches will be posted to."
+    )
     async def settings(self, ctx):
         scrim_settings = self.read_json()
         author = ctx.message.author
@@ -228,7 +224,7 @@ class MatchMaker(commands.Cog):
                         
                 except asyncio.TimeoutError:
                     settings_embed.color = discord.Color.dark_grey()
-                    settings_embed.title += "(Inactive)"
+                    settings_embed.title += " (Inactive)"
                 await embed_message.edit(embed=settings_embed)
                 #Send embed with emojis
             elif set([role.id for role in author.roles]) & set(scrim_settings[guild_id]["roles"]):

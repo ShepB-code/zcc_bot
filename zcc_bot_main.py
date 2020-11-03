@@ -17,14 +17,25 @@ import DataWriter
 import DataSender
 import MatchMaker
 guild_id = 765015176587640842
+intents = discord.Intents.default()
+intents.members = True  # Subscribe to the privileged members intent.
+bot = commands.Bot(command_prefix='+', intents=intents)
 
-bot = commands.Bot(command_prefix='+')
+command_impact = 0
+
 
 @bot.event
 async def on_ready():
     await bot.change_presence(status=discord.Status.invisible, activity=discord.Game('Made by Shep and Peter!'))
     print(f'Logged in as: {bot.user.name}')
     print(f'With ID: {bot.user.id}')
+
+@bot.event
+async def on_command_completion(ctx):
+    global command_impact
+    command_impact += 1
+    await ctx.send(command_impact)
+
 
 bot.add_cog(settings.Settings(bot))
 bot.add_cog(calculate.Calculate(bot))

@@ -1,0 +1,1 @@
+worker: python zcc_bot_main.py

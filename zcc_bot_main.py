@@ -4,7 +4,7 @@ import discord
 import itertools
 from discord.ext import commands
 import discord.utils
-
+import os
 #Importing Cogs
 #import settings
 import settings
@@ -50,5 +50,11 @@ bot.add_cog(DataSender.DataSender(bot, guild_id))
 bot.add_cog(DataWriter.DataWriter(bot))
 bot.add_cog(MatchMaker.MatchMaker(bot))
 bot.add_cog(help_functions.Impact(bot))
-with open('work_bot_token.txt', 'r') as f:
-    bot.run(f.read().strip())
+
+if "BOT_TOKEN" in os.environ.keys():
+    print("Starting bot...")
+    bot.run(os.environ['BOT_TOKEN'])
+else:
+    print(os.environ.keys())
+    with open('work_bot_token.txt', 'r') as f:
+        bot.run(f.read().strip())

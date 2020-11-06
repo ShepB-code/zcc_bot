@@ -5,6 +5,8 @@ from discord.ext import commands
 import discord.utils
 from discord.utils import get
 
+from help_functions import embed_footer
+
 class Settings(commands.Cog):
     prefix = "+"
     """Cog for the Settings Command"""
@@ -87,5 +89,5 @@ class Settings(commands.Cog):
             if not isinstance(key, int):
                 continue
             settings_embed.add_field(name=f"Place {key} Score", value=value)
-        settings_embed.set_footer(text='Made by Shep and Peter', icon_url=self.bot.get_user(self.bot.user.id).avatar_url)
+        settings_embed.set_footer(text=embed_footer(), icon_url=self.bot.get_user(self.bot.user.id).avatar_url)
         return settings_embed

@@ -7,6 +7,8 @@ import discord.utils
 from discord.utils import get
 from calculate import Calculate
 
+from help_functions import embed_footer
+
 class Results(commands.Cog):
     """Cog for the Results command"""
 
@@ -35,7 +37,7 @@ class Results(commands.Cog):
             leaderboard_embed.add_field(name=f"{i + 1}. {leaderboard[i][0]}", value=f"Score: **{leaderboard[i][1]}**", inline=False)
         
         
-        leaderboard_embed.set_footer(text='Made by Shep and Peter', icon_url=self.bot.get_user(self.bot.user.id).avatar_url)
+        leaderboard_embed.set_footer(text=embed_footer(), icon_url=self.bot.get_user(self.bot.user.id).avatar_url)
 
 
         await ctx.send(embed=leaderboard_embed)

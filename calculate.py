@@ -7,6 +7,7 @@ import discord.utils
 from discord.utils import get
 
 from settings import Settings
+from help_functions import embed_footer
 
 class Calculate(commands.Cog):
     """Cog for the Calculate command"""
@@ -101,7 +102,7 @@ class Calculate(commands.Cog):
                 calc_embed.add_field(name='Total', value=self.total(kill_input, place_input))
             
             #Adding final imformation to the embed, then sending it
-            calc_embed.set_footer(text='Made by Shep and Peter', icon_url=self.bot.get_user(self.bot.user.id).avatar_url)
+            calc_embed.set_footer(text=embed_footer(), icon_url=self.bot.get_user(self.bot.user.id).avatar_url)
             await ctx.send(embed=calc_embed)
             
 

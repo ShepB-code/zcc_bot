@@ -9,6 +9,8 @@ import asyncio
 import json
 from clanClass import ClanClass
 
+from help_functions import embed_footer
+
 class DataSender(commands.Cog):
     prefix = "+"
     """Cog for the clan command"""
@@ -83,7 +85,7 @@ class DataSender(commands.Cog):
                 clan_embed.add_field(name="Matches Played 🥊", value=current_clan['cs_matches'], inline=True)
                 clan_embed.add_field(name="Winrate 📈", value=current_clan['win_rate'], inline=False)
                 clan_embed.set_image(url=current_clan['clan_image'])
-                clan_embed.set_footer(text='Made by Shep and Peter', icon_url=self.bot.get_user(self.bot.user.id).avatar_url)
+                clan_embed.set_footer(text=embed_footer(), icon_url=self.bot.get_user(self.bot.user.id).avatar_url)
                 
                 return clan_embed
             
@@ -202,7 +204,7 @@ class DataSender(commands.Cog):
                 player_embed.add_field(name="Total Matches Played", value=current_player["cs_matches"], inline=True)
                 player_embed.add_field(name="Win Rate", value=current_player["win_rate"], inline=False)
                 player_embed.set_thumbnail(url=current_player["player_image"])
-
+                player_embed.set_footer(text=embed_footer(), icon_url=self.bot.get_user(self.bot.user.id).avatar_url)
                 return player_embed
         
             

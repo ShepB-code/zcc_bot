@@ -8,6 +8,8 @@ from discord.utils import get
 import asyncio
 import json
 
+from help_functions import message_wait_for, reaction_wait_for, embed_footer
+
 class MatchMaker(commands.Cog):
     """Cog for the Scrim command"""
     def __init__(self, bot):
@@ -28,40 +30,6 @@ class MatchMaker(commands.Cog):
         with open("data.json", "w") as outfile: 
             json.dump(file_dict, outfile, indent=4)
 
-    async def message_wait_for(self, ctx, msg, timeout=20):
-        try:
-            def message_check(message):
-                return message.author == ctx.author and message.channel == ctx.channel
-            user_message = await self.bot.wait_for("message", timeout=timeout, check=message_check)
-            
-            return user_message
-        except asyncio.TimeoutError:
-            new_msg = msg.content + " (Inactive)"
-            await msg.edit(content=new_msg)
-        
-            raise asyncio.TimeoutError
-
-    async def reaction_wait_for(self, ctx, emojis, msg, timeout=20):
-        try:
-            for emoji in emojis:
-                await msg.add_reaction(emoji)
-            def reaction_check(reaction, user):
-                return user == ctx.message.author and str(reaction.emoji) in emojis
-            reaction, user = await self.bot.wait_for("reaction_add", timeout=timeout, check=reaction_check)
-            return str(reaction), user
-        
-        except asyncio.TimeoutError:
-            if len(msg.embeds):
-                embed = msg.embeds[0]
-                embed.color = discord.Color.dark_grey()
-                embed.title += "(Inactive)"
-                await msg.edit(embed=embed)
-            else:
-                new_msg = msg.content + " (Inactive)"
-                await msg.edit(content=new_msg)
-    
-            raise asyncio.TimeoutError
-    
     async def get_message_from_emojis(self, ctx, reaction, emoji_dict):
         msg = await ctx.send(emoji_dict[reaction][0])
         type_change = emoji_dict[reaction][1]
@@ -71,38 +39,38 @@ class MatchMaker(commands.Cog):
     async def setup_match(self, ctx, match_type):
         #General Questions
         msg = await ctx.send("Please enter the game that the match will be played in. ")
-        match_game = (await self.message_wait_for(ctx, msg)).content
+        match_game = (await message_wait_for(self.bot, ctx, msg)).content
         await msg.delete()
         
         msg = await ctx.send("Please enter the opponents in this match (Each separated by a space). ")
-        match_players = (await self.message_wait_for(ctx, msg)).content.split()
+        match_players = (await message_wait_for(self.bot, ctx, msg)).content.split()
         await msg.delete()
         
         msg = await ctx.send("Please enter a date and time for this match: ")
-        match_time = (await self.message_wait_for(ctx, msg)).content
+        match_time = (await message_wait_for(self.bot, ctx, msg)).content
         await msg.delete()
 
         msg = await ctx.send("How many rounds will be played?")
-        match_rounds = int((await self.message_wait_for(ctx, msg)).content)
+        match_rounds = int((await message_wait_for(self.bot, ctx, msg)).content)
         await msg.delete()
         
         if match_type == "Player":
             msg = await ctx.send("Who would you like to notify for this match (Ping a member)")
-            match_notify = (await self.message_wait_for(ctx, msg)).mentions
+            match_notify = (await message_wait_for(self.bot, ctx, msg)).mentions
 
             await msg.delete()
             msg = await ctx.send("Please enter any additional information for this match.")
-            match_info = (await self.message_wait_for(ctx, msg)).content
+            match_info = (await message_wait_for(self.bot, ctx, msg)).content
             await msg.delete()
 
             return match_game, match_players, match_time, match_rounds, match_notify, match_info
         elif match_type == "Clan":
             msg = await ctx.send("Which teams would you like to use? (Ping roles that correspond to that team)")
-            match_teams = (await self.message_wait_for(ctx, msg)).role_mentions
+            match_teams = (await message_wait_for(self.bot, ctx, msg)).role_mentions
             await msg.delete()
 
             msg = await ctx.send("Please enter any additional information for this match.")
-            match_info = (await self.message_wait_for(ctx, msg)).content
+            match_info = (await message_wait_for(self.bot, ctx, msg)).content
             await msg.delete()
 
             return match_game, match_players, match_time, match_rounds, match_teams, match_info
@@ -127,7 +95,7 @@ class MatchMaker(commands.Cog):
         if guild_id in scrim_settings.keys():
             msg = await ctx.send("What kind of match would you like to set up? React with ⚔ for a player vs player match, or react with 🏰 for a clan match.")
 
-            reaction, user = await self.reaction_wait_for(ctx, ["⚔", "🏰"], msg)
+            reaction, user = await reaction_wait_for(self.bot, ctx, ["⚔", "🏰"], msg)
             if reaction == "⚔":
                 match_type = "Player"
                 match_game, match_players, match_time, match_rounds, match_notify, match_info = await self.setup_match(ctx, match_type)
@@ -145,7 +113,7 @@ class MatchMaker(commands.Cog):
             match_embed.add_field(name="Competitors", value=f"{match_players[0]} vs {match_players[1]}", inline=False)
             match_embed.add_field(name="Rounds", value=match_rounds, inline=False)
             match_embed.set_thumbnail(url=guild.icon_url)
-            match_embed.set_footer(text='Made by Shep and Peter', icon_url=self.bot.get_user(self.bot.user.id).avatar_url)
+            match_embed.set_footer(text=embed_footer(), icon_url=self.bot.get_user(self.bot.user.id).avatar_url)
 
             if match_type == "Clan":
                 match_embed.add_field(name="Team(s)", value=" ".join([notify.mention for notify in match_notify]), inline=False)
@@ -153,7 +121,7 @@ class MatchMaker(commands.Cog):
             embed_msg = await ctx.send(embed=match_embed)
             
             await ctx.send(f"{author.mention}, please confirm the scrim details by reacting. On approval, match info will be sent to {channel.mention}.")
-            reaction, user = await self.reaction_wait_for(ctx, ["✅", "❌"], embed_msg)
+            reaction, user = await reaction_wait_for(self.bot, ctx, ["✅", "❌"], embed_msg)
 
             if reaction == "✅":
                 await channel.send(embed=match_embed)
@@ -184,7 +152,7 @@ class MatchMaker(commands.Cog):
             settings_embed.add_field(name="Roles 📜", value=roles, inline=True)
             settings_embed.add_field(name="Channel 📺", value=guild.get_channel(current_settings['channel']).mention, inline=True)
             settings_embed.set_thumbnail(url=guild_image)
-            settings_embed.set_footer(text='Made by Shep and Peter', icon_url=self.bot.get_user(self.bot.user.id).avatar_url)
+            settings_embed.set_footer(text=embed_footer(), icon_url=self.bot.get_user(self.bot.user.id).avatar_url)
             
             return settings_embed 
         settings_embed = None
@@ -198,7 +166,7 @@ class MatchMaker(commands.Cog):
                 embed_dict = settings_embed.to_dict()
                 try:
                     while True:
-                        reaction, user = await self.reaction_wait_for(ctx, ["📜", "📺", "❌"], embed_message)
+                        reaction, user = await reaction_wait_for(self.bot, ctx, ["📜", "📺", "❌"], embed_message)
                         emoji_dict = {
                             "📜": ["Please @ roles you would like to update", "roles", 0],
                             "📺": ["Please mention new channel", "channel", 1]
@@ -208,7 +176,7 @@ class MatchMaker(commands.Cog):
                         if reaction == "❌":
                             raise asyncio.TimeoutError                          
                         msg, type_change, index = await self.get_message_from_emojis(ctx, reaction, emoji_dict)
-                        user_message = await self.message_wait_for(ctx, msg)
+                        user_message = await message_wait_for(self.bot, ctx, msg)
                         if type_change == "roles":   
                             embed_dict["fields"][index]["value"] = " ".join([role.mention for role in user_message.role_mentions])
                             current_settings[type_change] = [role.id for role in user_message.role_mentions]
@@ -238,7 +206,7 @@ class MatchMaker(commands.Cog):
             if self.is_admin(author):
                 msg = await ctx.send("There are no saved settings. Would you like to create scrim settings? ")
 
-                reaction, user = await self.reaction_wait_for(ctx, ["✅", "❌"], msg)
+                reaction, user = await reaction_wait_for(self.bot, ctx, ["✅", "❌"], msg)
 
                 if reaction == "❌":
                     return
@@ -247,11 +215,11 @@ class MatchMaker(commands.Cog):
                 while True:
                     msg = await ctx.send("Please @ the roles that you want to add. Default perm is admin.")
 
-                    add_role = (await self.message_wait_for(ctx, msg)).role_mentions
+                    add_role = (await message_wait_for(bot, ctx, msg)).role_mentions
                     
                     roles_list += add_role
                     continue_message = await ctx.send("Would you like to add more roles?")
-                    reaction, user = await self.reaction_wait_for(ctx, ["✅", "❌"], continue_message)
+                    reaction, user = await reaction_wait_for(self.bot, ctx, ["✅", "❌"], continue_message)
 
                     await continue_message.delete()
                     if reaction == "❌":
@@ -259,7 +227,7 @@ class MatchMaker(commands.Cog):
                     await msg.delete()
 
                 msg = await ctx.send("Please enter the channel you want to send scrims to. #channel_name")
-                channel_add = (await self.message_wait_for(ctx, msg)).channel_mentions[0]
+                channel_add = (await message_wait_for(self.bot, ctx, msg)).channel_mentions[0]
                 
                 confirmation_embed = discord.Embed(
                     title="Confirm Settings",
@@ -270,7 +238,7 @@ class MatchMaker(commands.Cog):
                 confirmation_embed.add_field(name="Channel", value=channel_add.mention, inline=True)
 
                 msg = await ctx.send(embed=confirmation_embed)
-                reaction, user = await self.reaction_wait_for(ctx, ["✅", "❌"], msg)
+                reaction, user = await reaction_wait_for(self.bot, ctx, ["✅", "❌"], msg)
 
                 if reaction == "❌":
                     return

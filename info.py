@@ -6,7 +6,8 @@ import discord.utils
 from discord.utils import get
 import asyncio
 
-import stats
+from help_functions import embed_footer
+
 
 class Info(commands.Cog):
     prefix = "+"
@@ -37,7 +38,7 @@ class Info(commands.Cog):
         )
         info_embed_home.add_field(name="Created", value="September, 2020", inline=True)
         info_embed_home.add_field(name="Creators", value=f"{self.bot.get_user(shep_id).mention} & {self.bot.get_user(peter_id).mention}", inline=True)
-        info_embed_home.set_footer(text='Made by Shep and Peter' + str(stats.command_impact), icon_url=self.bot.get_user(self.bot.user.id).avatar_url)
+        info_embed_home.set_footer(text=embed_footer(), icon_url=self.bot.get_user(self.bot.user.id).avatar_url)
         
         commands_embed = discord.Embed(
             title="Commands",
@@ -60,7 +61,7 @@ class Info(commands.Cog):
 
         embed_message = await ctx.send(embed=info_embed_home)
 
-        commands_embed.set_footer(text='Made by Shep and Peter', icon_url=self.bot.get_user(self.bot.user.id).avatar_url)
+        commands_embed.set_footer(text=embed_footer(), icon_url=self.bot.get_user(self.bot.user.id).avatar_url)
         for emoji in emoji_list: 
             await embed_message.add_reaction(emoji)
 

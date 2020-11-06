@@ -6,7 +6,7 @@ from discord.ext import commands
 import discord.utils
 from discord.utils import get
 import asyncio
-import json 
+import json
 
 class MatchMaker(commands.Cog):
     """Cog for the Scrim command"""

@@ -81,9 +81,6 @@ class Calculate(commands.Cog):
                     color=discord.Color.blue()
                 )
                 
-                
-
-
                 for item in value_list:
                     total_tuple = self.total(int(item[1]), int(item[2]))
                     total_score += total_tuple[1]
@@ -106,6 +103,7 @@ class Calculate(commands.Cog):
             #Adding final imformation to the embed, then sending it
             calc_embed.set_footer(text='Made by Shep and Peter', icon_url=self.bot.get_user(self.bot.user.id).avatar_url)
             await ctx.send(embed=calc_embed)
+            
 
         except ValueError:
             await ctx.send("When calling `?calculate`, you must give it at least two parameters: kills and place. A valid call to this command would be `?calculate 10 1`. ")   

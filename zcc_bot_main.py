@@ -12,16 +12,17 @@ import calculate
 import results
 import CommandErrorHandler
 import info
-import read
 import DataWriter
 import DataSender
 import MatchMaker
+
+import stats
 guild_id = 765015176587640842
 intents = discord.Intents.default()
 intents.members = True  # Subscribe to the privileged members intent.
 bot = commands.Bot(command_prefix='+', intents=intents)
 
-command_impact = 0
+stats.command_impact = 0
 
 
 @bot.event
@@ -32,17 +33,13 @@ async def on_ready():
 
 @bot.event
 async def on_command_completion(ctx):
-    global command_impact
-    command_impact += 1
-    await ctx.send(command_impact)
-
-
+    stats.command_impact += 1
+    
 bot.add_cog(settings.Settings(bot))
 bot.add_cog(calculate.Calculate(bot))
 bot.add_cog(results.Results(bot))
-bot.add_cog(CommandErrorHandler.CommandErrorHandler(bot))
+#bot.add_cog(CommandErrorHandler.CommandErrorHandler(bot))
 bot.add_cog(info.Info(bot))
-bot.add_cog(read.Read(bot))
 bot.add_cog(DataSender.DataSender(bot, guild_id))
 bot.add_cog(DataWriter.DataWriter(bot))
 bot.add_cog(MatchMaker.MatchMaker(bot))

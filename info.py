@@ -6,6 +6,7 @@ import discord.utils
 from discord.utils import get
 import asyncio
 
+import stats
 
 class Info(commands.Cog):
     prefix = "+"
@@ -36,24 +37,27 @@ class Info(commands.Cog):
         )
         info_embed_home.add_field(name="Created", value="September, 2020", inline=True)
         info_embed_home.add_field(name="Creators", value=f"{self.bot.get_user(shep_id).mention} & {self.bot.get_user(peter_id).mention}", inline=True)
-        info_embed_home.set_footer(text='Made by Shep and Peter', icon_url=self.bot.get_user(self.bot.user.id).avatar_url)
+        info_embed_home.set_footer(text='Made by Shep and Peter' + str(stats.command_impact), icon_url=self.bot.get_user(self.bot.user.id).avatar_url)
         
         commands_embed = discord.Embed(
             title="Commands",
             description=f"Commands in the ZCC Bot\nReact with {emoji_list[1]} to see info about the ZCC Bot",
             color=discord.Color.blue()
         )
-
+        
         for name in cogs:
             cog = self.bot.get_cog(name)
-            for c in [command for command in cog.walk_commands()]:
-                commands_embed.add_field(name=c.name, value=c.help.replace("{prefix}", self.prefix), inline=False)
-                
-        """
-        commands_embed.add_field(name="Settings", value=f"`{prefix}settings` to check current settings\n`{prefix}settings update` to update settings", inline=False)
-        commands_embed.add_field(name="Calculate", value=f"There are two ways to use this command\n\nFirst Usage:\n`{prefix}calc or {prefix}c`, followed by two parameters: `kills` and `place number`\n\nSecond Usage:\n`{prefix}calc or {prefix}c`, followed by at least 4 paramters: `player_name`, `match_name`, `kills`, and `placing`.\n\nUsing this same format, you can enter and calculate many matches in one call.\n\nExample: `{prefix}calc Shep MatchOne 10 1 MatchTwo 20 2`", inline=False)
-        commands_embed.add_field(name="Results", value=f"`{prefix}results` to get the top *10* scores that have been entered.\nYou can add any integer as a parameter to this function to get specific placings.\nExample: `{prefix}results 50` would get the top 50 scores.", inline=False)
-        """
+            
+            for c in cog.get_commands():
+                if isinstance(c, commands.Group):
+                    command_string = ""
+                    for sub_c in c.walk_commands():                    
+                        command_string += "〰" + sub_c.help.replace("{prefix}", self.prefix) + "\n" * 2
+                        
+                    commands_embed.add_field(name=f"**{self.prefix}{c.name}**", value=f"**Subcommands**\n{command_string}", inline=False)
+                else:
+                    commands_embed.add_field(name=f"**{self.prefix}{c.name}**", value="〰"+c.help.replace('{prefix}', self.prefix), inline=False)
+
         embed_message = await ctx.send(embed=info_embed_home)
 
         commands_embed.set_footer(text='Made by Shep and Peter', icon_url=self.bot.get_user(self.bot.user.id).avatar_url)

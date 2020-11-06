@@ -16,7 +16,7 @@ class Settings(commands.Cog):
         prefix = self.bot.command_prefix
 
     @commands.group(
-        help=f"A command to access and update calculation settings.\n`{prefix}settings` to view current settings"
+        help="A command to access and update calculation settings.\n`{prefix}settings` to view current settings"
     )
     @commands.has_guild_permissions(administrator=True)
     async def settings(self, ctx):
@@ -27,7 +27,7 @@ class Settings(commands.Cog):
                 await ctx.send(embed=self.create_embed())
     
     @settings.command(
-        help=f"`{prefix}settings update` to update settings"
+        help="`{prefix}settings update` to update settings"
     )
     async def update(self, ctx):
 

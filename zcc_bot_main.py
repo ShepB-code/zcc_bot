@@ -28,7 +28,7 @@ command_impact = 0
 
 @bot.event
 async def on_ready():
-    await bot.change_presence(status=discord.Status.invisible, activity=discord.Game('Made by Shep and Peter!'))
+    await bot.change_presence(status=discord.Status.online, activity=discord.Game('Made by Shep and Peter!'))
     print(f'Logged in as: {bot.user.name}')
     print(f'With ID: {bot.user.id}')
 

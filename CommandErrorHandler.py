@@ -20,7 +20,7 @@ class CommandErrorHandler(commands.Cog):
         if isinstance(error, commands.CommandNotFound):
             await ctx.send("That command doesn't exist!")
 
-        if isinstance(error.original, asyncio.exceptions.TimeoutError):
+        if isinstance(error.original, asyncio.TimeoutError):
             await ctx.send("Message has expired, please run the command again.")
         
             
